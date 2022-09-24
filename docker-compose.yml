@@ -1,0 +1,17 @@
+version: '2.4'
+services:
+  golang:
+    image: vender-api
+    network_mode: bridge
+    ports:
+      - 3000:3000
+  postgres:
+    image: postgres:14-bullseye
+    restart: "unless-stopped"
+    network_mode: bridge
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: vender
+      POSTGRES_PASSWORD: 79C*xgz1@rcf
+      POSTGRES_DB: vender
