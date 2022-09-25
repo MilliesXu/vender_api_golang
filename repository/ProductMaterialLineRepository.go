@@ -1,4 +1,4 @@
-package domain
+package repository
 
 type ProductMaterialLineRepository interface {
 	Create()

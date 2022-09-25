@@ -1,4 +1,4 @@
-package domain
+package repository
 
 type ProductRepository interface {
 	Create()
