@@ -52,8 +52,8 @@ func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, us
 
 	helper.PanicIfError(err)
 
-	SQL := "UPDATE user SET firstname = ?, lastname = ?, email = ? where id = ?"
-	_, err = tx.ExecContext(ctx, SQL, &userResult.Firstname, &userResult.Lastname, &userResult.Email)
+	SQL := "UPDATE user SET firstname = ?, lastname = ?, email = ?, updated_at = ? where id = ?"
+	_, err = tx.ExecContext(ctx, SQL, &userResult.Firstname, &userResult.Lastname, &userResult.Email, time.Now(), userResult.Id)
 
 	helper.PanicIfError(err)
 
@@ -61,9 +61,9 @@ func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, us
 }
 
 func (repository *UserRepositoryImpl) FindProfile(ctx context.Context, tx *sql.Tx) (*domain.User, error) {
-	userId := ctx.Value("public_id").(string)
+	userId := ctx.Value("user_id").(int)
 
-	SQL := "SELECT id, public_id, firstname, lastname, email, password, password_reset_code FROM user WHERE public_id = ?"
+	SQL := "SELECT public_id, firstname, lastname, email, password, password_reset_code FROM user WHERE id = ?"
 
 	rows, err := tx.QueryContext(ctx, SQL, userId)
 
@@ -72,7 +72,7 @@ func (repository *UserRepositoryImpl) FindProfile(ctx context.Context, tx *sql.T
 	user := domain.User{}
 
 	if rows.Next() {
-		err := rows.Scan(&user.Id, &user.Firstname, &user.Lastname, &user.Email, &user.Password, &user.PasswordResetCode)
+		err := rows.Scan(&user.PublicId, &user.Firstname, &user.Lastname, &user.Email, &user.Password, &user.PasswordResetCode)
 
 		helper.PanicIfError(err)
 
@@ -103,9 +103,9 @@ func (repository *UserRepositoryImpl) FindByEmail(ctx context.Context, tx *sql.T
 }
 
 func (repository *UserRepositoryImpl) Verification(ctx context.Context, tx *sql.Tx, verificationCode string) (*domain.User, error) {
-	userId := ctx.Value("public_id").(string)
+	userId := ctx.Value("user_id").(int)
 
-	SQL := "SELECT firstname, lastname, email FROM user WHERE public_id = ?"
+	SQL := "SELECT firstname, lastname, email FROM user WHERE id = ?"
 
 	rows, err := tx.QueryContext(ctx, SQL, userId)
 
@@ -135,9 +135,9 @@ func (repository *UserRepositoryImpl) RequestChangePassword(ctx context.Context,
 
 	user.PasswordResetCode = uuid.NewString()
 
-	SQL := "UPDATE user SET password_reset_code = ? WHERE id = ?"
+	SQL := "UPDATE user SET password_reset_code = ?, updated_at = ? WHERE id = ?"
 
-	_, err = tx.ExecContext(ctx, SQL, user.PasswordResetCode, user.Id)
+	_, err = tx.ExecContext(ctx, SQL, user.PasswordResetCode, time.Now(), user.Id)
 
 	helper.PanicIfError(err)
 }
@@ -157,9 +157,9 @@ func (repository *UserRepositoryImpl) ResetPassword(ctx context.Context, tx *sql
 
 	user.Password = string(newPassword)
 
-	SQL := "UPDATE user SET password_reset_code = ?, password = ? WHERE id = ?"
+	SQL := "UPDATE user SET password_reset_code = ?, password = ?, updated_at = ? WHERE id = ?"
 
-	_, err = tx.ExecContext(ctx, SQL, nil, &user.Password, &user.Id)
+	_, err = tx.ExecContext(ctx, SQL, nil, &user.Password, time.Now(), &user.Id)
 
 	helper.PanicIfError(err)
 }
